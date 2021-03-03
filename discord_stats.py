@@ -9,19 +9,22 @@ from collections import Counter
 from emoji import UNICODE_EMOJI
 import re
 
-client = commands.Bot(command_prefix='!')
+
+intents = discord.Intents.default()
+intents.members = True
+#client = discord.Client(command_prefix='!', intents=intents)
+client = commands.Bot(command_prefix='!',  intents=intents)
 
 @client.event
 async def on_ready():
     print('Logged on as {0}!'.format(client.user))
 
-@client.event
-async def on_message(message):
-    idx_di = message.content.find('di') 
-    if idx_di != -1:
-        await message.channel.send(message.content[idx_di+2:])
-
-    await client.process_commands(message)
+#@client.event
+#async def on_message(message):
+#    idx_di = message.content.find('di') 
+#    if idx_di != -1:
+#        await message.channel.send(message.content[idx_di+2:])
+#    await client.process_commands(message)
 
 @client.command()
 @commands.is_owner()
@@ -197,6 +200,48 @@ def get_top(nb, li, title) -> str:
     return s
 
 #mass_stats()
+
+@client.command(
+    name="add_quote",
+	help="Ajoute un citation à la base de donnée",
+	brief="Ajoute une citation"
+)
+# Add quote
+async def add_quote(ctx, author: discord.Member , *args):
+    #Current ID -> read_csv
+    dataframe = pd.read_csv('./data/quote.csv',sep=';',index_col=False, dtype={"id":int})
+    last_id = dataframe["id"].values[-1]
+    current_id = last_id + 1
+    time = ctx.message.created_at.strftime('%d.%m.%Y %H:%M:%S')
+    writer_id = "<@!" + str(ctx.author.id) + ">"
+    author_id = "<@!" + str(author.id) + ">"
+    message_id = ctx.message.id
+   
+    #quote = quote.replace(';',',')
+    quote = ' '.join(args)
+    quote = quote.replace(';',',')
+
+    #Ecrire dans le csv.
+ 
+    to_write = ";".join([str(current_id),time,writer_id,author_id,quote,str(message_id)]) + "\n"
+    await ctx.send(f'{to_write}')
+    #TODO Check encodage à, è,é î,ï
+    fichier = open('./data/quote.csv',"a")
+    fichier.write(to_write)
+
+@client.command(
+    name="get_quote",
+	help="Si aucun argument, affiche une citation aléatoire, Si l'argument est un entier " +
+    "affiche la citadion de l'ID donnée. Enfin , si l'argument est un membre de discord, affiche l'une de ses citations au hasard",
+	brief="Affiche une citation"
+)
+
+async def get_quote(ctx, author=None):
+    dataframe = pd.read_csv('./data/quote.csv',sep=';',index_col=False, dtype={"id":int})
+    line_number = random.randint(0,len(dataframe)-1)
+    line = dataframe.loc[line_number]
+    line = line.to_dict()
+    await ctx.send(f'{line["author"]} : \"{line["quote"]}\"')
 
 
 client.run(open("token.scord", 'r').read())
