@@ -206,10 +206,9 @@ def get_top(nb, li, title) -> str:
 	help="Ajoute un citation à la base de donnée",
 	brief="Ajoute une citation"
 )
-# Add quote
+
 async def add_quote(ctx, author: discord.Member , *args):
-    #Current ID -> read_csv
-    dataframe = pd.read_csv('./data/quote.csv',sep=';',index_col=False, dtype={"id":int})
+    dataframe = read_csv()
     last_id = dataframe["id"].values[-1]
     current_id = last_id + 1
     time = ctx.message.created_at.strftime('%d.%m.%Y %H:%M:%S')
@@ -217,31 +216,49 @@ async def add_quote(ctx, author: discord.Member , *args):
     author_id = "<@!" + str(author.id) + ">"
     message_id = ctx.message.id
    
-    #quote = quote.replace(';',',')
     quote = ' '.join(args)
     quote = quote.replace(';',',')
 
-    #Ecrire dans le csv.
- 
     to_write = ";".join([str(current_id),time,writer_id,author_id,quote,str(message_id)]) + "\n"
     await ctx.send(f'{to_write}')
-    #TODO Check encodage à, è,é î,ï
-    fichier = open('./data/quote.csv',"a")
+
+    fichier = open('./data/quote.csv',"a", encoding='utf8')
     fichier.write(to_write)
 
 @client.command(
     name="get_quote",
-	help="Si aucun argument, affiche une citation aléatoire, Si l'argument est un entier " +
-    "affiche la citadion de l'ID donnée. Enfin , si l'argument est un membre de discord, affiche l'une de ses citations au hasard",
+	help="Affiche une citation aléatoire, si un member est donnée, affiche l'une de ses citation au hasard",
 	brief="Affiche une citation"
 )
 
-async def get_quote(ctx, author=None):
-    dataframe = pd.read_csv('./data/quote.csv',sep=';',index_col=False, dtype={"id":int})
-    line_number = random.randint(0,len(dataframe)-1)
-    line = dataframe.loc[line_number]
-    line = line.to_dict()
-    await ctx.send(f'{line["author"]} : \"{line["quote"]}\"')
+async def get_quote(ctx, author: discord.Member = None):
+    dataframe = read_csv()
+    
+    if author is None:
+        line_number = random.randint(0,len(dataframe)-1)
+        line = dataframe.loc[line_number]
+    else:
+        dataframe_author = dataframe.loc[dataframe['author'] == f"<@!{author.id}>"]
+        line_number = random.randint(0,len(dataframe_author)-1)
+        line = dataframe_author.loc[line_number]
 
+    line = line.to_dict()
+    await ctx.send(f'{line["author"]} : \"{line["quote"]}\"')   
+    
+@client.command(
+    name="get_quote_id",
+	help="Affiche la citadion de l'ID donnée",
+	brief="Affiche la citadion de l'ID donnée"
+)
+
+async def get_quote_id(ctx, id : int):
+    dataframe = read_csv()
+    line = dataframe.loc[dataframe['id'] == id]
+    line = line.to_dict()
+    await ctx.send(f'{line["author"][id]} : \"{line["quote"][id]}\"')
+
+
+def read_csv():
+    return pd.read_csv('./data/quote.csv',sep=';',index_col=False, dtype={"id":int})
 
 client.run(open("token.scord", 'r').read())
