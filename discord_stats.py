@@ -241,22 +241,21 @@ async def quote(ctx, author: Union[discord.Member, int] = None):
     dataframe = read_csv()
     
     if author is None:
-        line_number = random.randint(0,len(dataframe)-1)
+        line_number = random.randint(0, len(dataframe)-1)
         line = dataframe.loc[line_number]
     elif type(author) == discord.Member:
         await ctx.send(f'{author}')
         dataframe_author = dataframe.loc[dataframe['author'] == f"<@!{author.id}>"]
-        line_number = random.randint(0,len(dataframe_author)-1)
+        line_number = random.randint(0, len(dataframe_author)-1)
         line = dataframe_author.loc[line_number]
     elif type(author) == int:
-        id = author 
-        line = dataframe.loc[dataframe['id'] == id]
+        line = dataframe.loc[dataframe['id'] == author]
 
     line = line.to_dict()
-    if type(author)==int:
-        await ctx.send(f'{line["author"][id]} : \"{line["quote"][id]}\"')
+    if type(author) == int:
+        await ctx.send(f'{line["author"][author]} : \"{line["quote"][author]}\" - *{author}*')
     else:
-        await ctx.send(f'{line["author"]} : \"{line["quote"]}\"')   
+        await ctx.send(f'{line["author"]} : \"{line["quote"]}\" - *n°{line["id"]}*')   
     
 @client.command(
     name="quote_context",
@@ -272,6 +271,6 @@ async def quote_context(ctx, id : int):
 
 
 def read_csv():
-    return pd.read_csv('./data/quote.csv',sep=';',index_col=False, dtype={"id":int})
+    return pd.read_csv('./data/quote/quote.csv',sep=';',index_col=False, dtype={"id":int})
 
 client.run(open("token.scord", 'r').read())
