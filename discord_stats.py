@@ -269,7 +269,6 @@ async def quote_context(ctx, id : int):
     line = line.to_dict()
     await ctx.send(f'https://discord.com/channels/{ctx.guild.id}/{line["message_id"][id]}')
 
-
 def read_csv():
     return pd.read_csv('./data/quote/quote.csv',sep=';',index_col=False, dtype={"id":int})
 
