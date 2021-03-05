@@ -227,7 +227,7 @@ async def quote_add(ctx, author: Union[discord.Member, str] , *args):
     to_write = ";".join([str(current_id), time, writer_id, author, quote, str(channel_id) + '/' + str(message_id)]) + "\n"
     # await ctx.send(f'{to_write}')
 
-    fichier = open('./data/quote.csv',"a", encoding='utf8')
+    fichier = open('./data/quote/quote.csv',"a", encoding='utf8')
     fichier.write(to_write)
     await ctx.send(f'Citation numero {current_id} ajoutée à la postérité !')
 
